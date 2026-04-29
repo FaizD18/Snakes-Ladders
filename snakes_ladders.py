@@ -7,6 +7,43 @@ import random
 import time
 
 
+# -------------------------------------------------------
+# Stack data structure (DSA concept)
+# A Stack works in LIFO order (Last In, First Out).
+# We use it to track move history - the most recent move
+# is always on top so we can quickly peek at the last move.
+# -------------------------------------------------------
+class Stack:
+    def __init__(self):
+        self.items = []
+
+    def push(self, item):
+        """Add an item to the top of the stack."""
+        self.items.append(item)
+
+    def pop(self):
+        """Remove and return the top item."""
+        if not self.is_empty():
+            return self.items.pop()
+
+    def peek(self):
+        """Return the top item without removing it."""
+        if not self.is_empty():
+            return self.items[-1]
+
+    def is_empty(self):
+        """Return True if the stack has no items."""
+        return len(self.items) == 0
+
+    def size(self):
+        """Return the number of items in the stack."""
+        return len(self.items)
+
+    def get_last(self, n):
+        """Return the last n items (most recent moves)."""
+        return self.items[-n:]
+
+
 # Snake mappings: head cell -> tail cell
 snakes = {16: 6, 48: 30, 64: 40, 79: 19, 93: 68, 95: 24, 99: 78}
 
@@ -109,7 +146,7 @@ def take_turn(name, position, history, is_computer=False):
     # Overshoot rule: must land on exactly 100
     if new_pos > 100:
         print(f"Overshot 100! {name} stays at cell {position}.")
-        history.append(f"{name}: rolled {dice}, stayed at {position} (overshoot)")
+        history.push(f"{name}: rolled {dice}, stayed at {position} (overshoot)")
         return position
 
     print(f"{name} moves to cell {new_pos}.")
@@ -119,14 +156,14 @@ def take_turn(name, position, history, is_computer=False):
         old_pos = new_pos
         new_pos = snakes[new_pos]
         print(f"Oh no, a snake! Slid down to cell {new_pos}.")
-        history.append(f"{name}: rolled {dice}, hit snake at {old_pos}, slid to {new_pos}")
+        history.push(f"{name}: rolled {dice}, hit snake at {old_pos}, slid to {new_pos}")
     elif new_pos in ladders:
         old_pos = new_pos
         new_pos = ladders[new_pos]
         print(f"A ladder! Climbed up to cell {new_pos}.")
-        history.append(f"{name}: rolled {dice}, climbed ladder at {old_pos}, up to {new_pos}")
+        history.push(f"{name}: rolled {dice}, climbed ladder at {old_pos}, up to {new_pos}")
     else:
-        history.append(f"{name}: rolled {dice}, moved to {new_pos}")
+        history.push(f"{name}: rolled {dice}, moved to {new_pos}")
 
     return new_pos
 
@@ -134,10 +171,10 @@ def take_turn(name, position, history, is_computer=False):
 def show_history(history):
     """Prints the last 10 moves from the history stack."""
     print("\n----- MOVE HISTORY (last 10 moves) -----")
-    if not history:
+    if history.is_empty():
         print("  No moves yet.")
     else:
-        for i, move in enumerate(history[-10:], 1):
+        for i, move in enumerate(history.get_last(10), 1):
             print(f"  {i}. {move}")
     print("-----------------------------------------")
 
@@ -162,8 +199,8 @@ def play_game():
     # Both players start at cell 0 (off the board)
     pos1 = 0
     pos2 = 0
-    # Move history - using a list as a stack (DSA concept)
-    history = []
+    # Move history - using our custom Stack class (DSA concept)
+    history = Stack()
 
     while True:
         print_board(pos1, pos2, name1, name2)
