@@ -5,6 +5,8 @@ A 2-player terminal-based game.
 
 import random
 import time
+import json
+import os
 
 
 # -------------------------------------------------------
@@ -56,6 +58,48 @@ ladders_medium = {3: 22, 11: 40, 20: 38, 28: 76, 50: 67, 63: 81, 71: 91}
 # Hard: more snakes, fewer ladders — extra long snake near the end!
 snakes_hard   = {10: 2, 16: 6, 36: 8, 48: 30, 52: 29, 64: 40, 79: 19, 93: 68, 95: 24, 99: 5}
 ladders_hard  = {3: 22, 20: 38, 50: 67, 71: 81}
+
+STATS_FILE = "stats.json"
+
+
+def load_stats():
+    """Loads win stats from the JSON file. Returns empty dict if file doesn't exist."""
+    if os.path.exists(STATS_FILE):
+        with open(STATS_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+
+def save_stats(stats):
+    """Saves the win stats dictionary to the JSON file."""
+    with open(STATS_FILE, "w") as f:
+        json.dump(stats, f, indent=2)
+
+
+def update_stats(winner):
+    """Adds a win for the winner and saves to file."""
+    stats = load_stats()
+    if winner in stats:
+        stats[winner] += 1
+    else:
+        stats[winner] = 1
+    save_stats(stats)
+
+
+def show_leaderboard():
+    """Prints all-time wins loaded from the stats file."""
+    stats = load_stats()
+    print("\n----- ALL-TIME LEADERBOARD -----")
+    if not stats:
+        print("  No games recorded yet.")
+    else:
+        # Sort players by wins (highest first)
+        sorted_stats = sorted(stats.items(), key=lambda x: x[1], reverse=True)
+        for i, (name, wins) in enumerate(sorted_stats, 1):
+            label = "win" if wins == 1 else "wins"
+            print(f"  {i}. {name}: {wins} {label}")
+    print("--------------------------------\n")
+
 
 DIFFICULTY_SETTINGS = {
     "easy":   (snakes_easy,   ladders_easy),
@@ -251,6 +295,8 @@ def play_game():
             print_board(pos1, pos2, name1, name2, snakes, ladders)
             print(f"\n*** {name1} WINS! ***")
             show_history(history)
+            update_stats(name1)
+            show_leaderboard()
             break
 
         # Player 2's turn (computer if vs_computer is True)
@@ -264,11 +310,14 @@ def play_game():
             print_board(pos1, pos2, name1, name2, snakes, ladders)
             print(f"\n*** {name2} WINS! ***")
             show_history(history)
+            update_stats(name2)
+            show_leaderboard()
             break
 
 
 def main():
     """Entry point - lets users play multiple rounds in a row."""
+    show_leaderboard()
     while True:
         play_game()
         again = input("\nPlay again? (y/n): ").strip().lower()
