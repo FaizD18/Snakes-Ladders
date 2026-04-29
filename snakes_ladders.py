@@ -67,10 +67,11 @@ def get_player_name(prompt, default):
     return name
 
 
-def take_turn(name, position):
+def take_turn(name, position, history):
     """
     Plays one turn for a player. Returns the new position,
-    or None if the player chose to quit.
+    or None if the player chose to quit. Each move is pushed
+    onto the history stack (a list used in LIFO style).
     """
     choice = input(f"\n{name}'s turn. Press ENTER to roll (or 'q' to quit): ")
     if choice.strip().lower() == "q":
@@ -84,19 +85,37 @@ def take_turn(name, position):
     # Overshoot rule: must land on exactly 100
     if new_pos > 100:
         print(f"Overshot 100! {name} stays at cell {position}.")
+        history.append(f"{name}: rolled {dice}, stayed at {position} (overshoot)")
         return position
 
     print(f"{name} moves to cell {new_pos}.")
 
     # Check for snake or ladder
     if new_pos in snakes:
+        old_pos = new_pos
         new_pos = snakes[new_pos]
         print(f"Oh no, a snake! Slid down to cell {new_pos}.")
+        history.append(f"{name}: rolled {dice}, hit snake at {old_pos}, slid to {new_pos}")
     elif new_pos in ladders:
+        old_pos = new_pos
         new_pos = ladders[new_pos]
         print(f"A ladder! Climbed up to cell {new_pos}.")
+        history.append(f"{name}: rolled {dice}, climbed ladder at {old_pos}, up to {new_pos}")
+    else:
+        history.append(f"{name}: rolled {dice}, moved to {new_pos}")
 
     return new_pos
+
+
+def show_history(history):
+    """Prints the last 10 moves from the history stack."""
+    print("\n----- MOVE HISTORY (last 10 moves) -----")
+    if not history:
+        print("  No moves yet.")
+    else:
+        for i, move in enumerate(history[-10:], 1):
+            print(f"  {i}. {move}")
+    print("-----------------------------------------")
 
 
 def main():
@@ -113,30 +132,36 @@ def main():
     # Both players start at cell 0 (off the board)
     pos1 = 0
     pos2 = 0
+    # Move history - using a list as a stack (DSA concept)
+    history = []
 
     while True:
         print_board(pos1, pos2, name1, name2)
 
         # Player 1's turn
-        new_pos = take_turn(name1, pos1)
+        new_pos = take_turn(name1, pos1, history)
         if new_pos is None:
             print("\nGame ended. Thanks for playing!")
+            show_history(history)
             break
         pos1 = new_pos
         if pos1 == 100:
             print_board(pos1, pos2, name1, name2)
             print(f"\n*** {name1} WINS! ***")
+            show_history(history)
             break
 
         # Player 2's turn
-        new_pos = take_turn(name2, pos2)
+        new_pos = take_turn(name2, pos2, history)
         if new_pos is None:
             print("\nGame ended. Thanks for playing!")
+            show_history(history)
             break
         pos2 = new_pos
         if pos2 == 100:
             print_board(pos1, pos2, name1, name2)
             print(f"\n*** {name2} WINS! ***")
+            show_history(history)
             break
 
 
