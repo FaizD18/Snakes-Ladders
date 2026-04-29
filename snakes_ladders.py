@@ -118,8 +118,8 @@ def show_history(history):
     print("-----------------------------------------")
 
 
-def main():
-    """Main game loop."""
+def play_game():
+    """Runs one full game from start to finish."""
     print("=" * 56)
     print("            WELCOME TO SNAKE & LADDER!")
     print("=" * 56)
@@ -163,6 +163,19 @@ def main():
             print(f"\n*** {name2} WINS! ***")
             show_history(history)
             break
+
+
+def main():
+    """Entry point - lets users play multiple rounds in a row."""
+    while True:
+        play_game()
+        again = input("\nPlay again? (y/n): ").strip().lower()
+        if again != "y":
+            print("\nThanks for playing! Goodbye.")
+            break
+        print("\n" + "=" * 56)
+        print("Starting a new game...")
+        print("=" * 56)
 
 
 if __name__ == "__main__":
