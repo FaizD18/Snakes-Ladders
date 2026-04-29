@@ -4,6 +4,7 @@ A 2-player terminal-based game.
 """
 
 import random
+import time
 
 
 # Snake mappings: head cell -> tail cell
@@ -67,15 +68,38 @@ def get_player_name(prompt, default):
     return name
 
 
-def take_turn(name, position, history):
+def choose_mode():
+    """
+    Asks the user to pick a game mode.
+    Returns True for vs Computer, False for 2-player.
+    """
+    print("\nGame modes:")
+    print("  1. Two Players")
+    print("  2. Play vs Computer")
+    while True:
+        choice = input("Choose mode (1 or 2): ").strip()
+        if choice == "1":
+            return False
+        elif choice == "2":
+            return True
+        else:
+            print("Invalid choice. Please type 1 or 2.")
+
+
+def take_turn(name, position, history, is_computer=False):
     """
     Plays one turn for a player. Returns the new position,
-    or None if the player chose to quit. Each move is pushed
+    or None if a human player chose to quit. Each move is pushed
     onto the history stack (a list used in LIFO style).
+    Computer players auto-roll after a short pause.
     """
-    choice = input(f"\n{name}'s turn. Press ENTER to roll (or 'q' to quit): ")
-    if choice.strip().lower() == "q":
-        return None
+    if is_computer:
+        print(f"\n{name}'s turn. Rolling...")
+        time.sleep(1.2)   # short pause so the player can follow along
+    else:
+        choice = input(f"\n{name}'s turn. Press ENTER to roll (or 'q' to quit): ")
+        if choice.strip().lower() == "q":
+            return None
 
     dice = roll_dice()
     print(f"{name} rolled a {dice}.")
@@ -124,9 +148,15 @@ def play_game():
     print("            WELCOME TO SNAKE & LADDER!")
     print("=" * 56)
 
+    # Pick game mode
+    vs_computer = choose_mode()
+
     # Get player names
     name1 = get_player_name("Enter Player 1's name: ", "Player 1")
-    name2 = get_player_name("Enter Player 2's name: ", "Player 2")
+    if vs_computer:
+        name2 = "Computer"
+    else:
+        name2 = get_player_name("Enter Player 2's name: ", "Player 2")
     print(f"\n{name1} vs {name2} - first to reach 100 wins!\n")
 
     # Both players start at cell 0 (off the board)
@@ -138,8 +168,8 @@ def play_game():
     while True:
         print_board(pos1, pos2, name1, name2)
 
-        # Player 1's turn
-        new_pos = take_turn(name1, pos1, history)
+        # Player 1's turn (always human)
+        new_pos = take_turn(name1, pos1, history, is_computer=False)
         if new_pos is None:
             print("\nGame ended. Thanks for playing!")
             show_history(history)
@@ -151,8 +181,8 @@ def play_game():
             show_history(history)
             break
 
-        # Player 2's turn
-        new_pos = take_turn(name2, pos2, history)
+        # Player 2's turn (computer if vs_computer is True)
+        new_pos = take_turn(name2, pos2, history, is_computer=vs_computer)
         if new_pos is None:
             print("\nGame ended. Thanks for playing!")
             show_history(history)
