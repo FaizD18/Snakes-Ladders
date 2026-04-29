@@ -18,26 +18,75 @@ def roll_dice():
     return random.randint(1, 6)
 
 
-def take_turn(player_num, position):
+def print_board(pos1, pos2, name1, name2):
+    """
+    Prints the 10x10 board with both players' positions.
+    Cells are numbered in a snake pattern (left-to-right, then right-to-left).
+    """
+    print()
+    print("=" * 56)
+    print("                  SNAKE & LADDER BOARD")
+    print("=" * 56)
+
+    # Print rows from top (cells 91-100) down to bottom (cells 1-10)
+    for row in range(9, -1, -1):
+        if row % 2 == 0:
+            cells = list(range(row * 10 + 1, row * 10 + 11))
+        else:
+            cells = list(range(row * 10 + 10, row * 10, -1))
+
+        row_str = ""
+        for cell in cells:
+            if cell == pos1 and cell == pos2:
+                label = "BB"     # Both players on this cell
+            elif cell == pos1:
+                label = "P1"
+            elif cell == pos2:
+                label = "P2"
+            elif cell in snakes:
+                label = " S"     # Snake head
+            elif cell in ladders:
+                label = " L"     # Ladder bottom
+            else:
+                label = str(cell).rjust(2)
+            row_str += "[" + label + "]"
+        print(row_str)
+
+    print("=" * 56)
+    print(f"  S = Snake Head    L = Ladder Bottom    BB = Both Players")
+    print(f"  P1 = {name1} (cell {pos1})")
+    print(f"  P2 = {name2} (cell {pos2})")
+    print("=" * 56)
+
+
+def get_player_name(prompt, default):
+    """Prompts for a name. Returns default if input is blank."""
+    name = input(prompt).strip()
+    if name == "":
+        return default
+    return name
+
+
+def take_turn(name, position):
     """
     Plays one turn for a player. Returns the new position,
     or None if the player chose to quit.
     """
-    choice = input(f"\nPlayer {player_num}'s turn. Press ENTER to roll (or 'q' to quit): ")
+    choice = input(f"\n{name}'s turn. Press ENTER to roll (or 'q' to quit): ")
     if choice.strip().lower() == "q":
         return None
 
     dice = roll_dice()
-    print(f"Player {player_num} rolled a {dice}.")
+    print(f"{name} rolled a {dice}.")
 
     new_pos = position + dice
 
     # Overshoot rule: must land on exactly 100
     if new_pos > 100:
-        print(f"Overshot 100! Player {player_num} stays at cell {position}.")
+        print(f"Overshot 100! {name} stays at cell {position}.")
         return position
 
-    print(f"Player {player_num} moves to cell {new_pos}.")
+    print(f"{name} moves to cell {new_pos}.")
 
     # Check for snake or ladder
     if new_pos in snakes:
@@ -52,35 +101,42 @@ def take_turn(player_num, position):
 
 def main():
     """Main game loop."""
-    print("=" * 40)
-    print("    SNAKE & LADDER GAME")
-    print("=" * 40)
+    print("=" * 56)
+    print("            WELCOME TO SNAKE & LADDER!")
+    print("=" * 56)
+
+    # Get player names
+    name1 = get_player_name("Enter Player 1's name: ", "Player 1")
+    name2 = get_player_name("Enter Player 2's name: ", "Player 2")
+    print(f"\n{name1} vs {name2} - first to reach 100 wins!\n")
 
     # Both players start at cell 0 (off the board)
     pos1 = 0
     pos2 = 0
 
     while True:
+        print_board(pos1, pos2, name1, name2)
+
         # Player 1's turn
-        new_pos = take_turn(1, pos1)
+        new_pos = take_turn(name1, pos1)
         if new_pos is None:
             print("\nGame ended. Thanks for playing!")
             break
         pos1 = new_pos
-        print(f"Player 1 is at {pos1}, Player 2 is at {pos2}")
         if pos1 == 100:
-            print("\n*** Player 1 WINS! ***")
+            print_board(pos1, pos2, name1, name2)
+            print(f"\n*** {name1} WINS! ***")
             break
 
         # Player 2's turn
-        new_pos = take_turn(2, pos2)
+        new_pos = take_turn(name2, pos2)
         if new_pos is None:
             print("\nGame ended. Thanks for playing!")
             break
         pos2 = new_pos
-        print(f"Player 1 is at {pos1}, Player 2 is at {pos2}")
         if pos2 == 100:
-            print("\n*** Player 2 WINS! ***")
+            print_board(pos1, pos2, name1, name2)
+            print(f"\n*** {name2} WINS! ***")
             break
 
 
