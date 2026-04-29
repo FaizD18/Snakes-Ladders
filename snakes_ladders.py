@@ -44,11 +44,24 @@ class Stack:
         return self.items[-n:]
 
 
-# Snake mappings: head cell -> tail cell
-snakes = {16: 6, 48: 30, 64: 40, 79: 19, 93: 68, 95: 24, 99: 78}
+# Snakes and ladders for each difficulty level
+# Easy: fewer snakes, more ladders
+snakes_easy   = {48: 30, 64: 40, 93: 68, 99: 78}
+ladders_easy  = {3: 22, 11: 40, 20: 38, 28: 76, 50: 67, 63: 81, 71: 91}
 
-# Ladder mappings: bottom cell -> top cell
-ladders = {3: 22, 11: 40, 20: 38, 28: 76, 50: 67, 63: 81, 71: 91}
+# Medium: balanced (default)
+snakes_medium  = {16: 6, 48: 30, 64: 40, 79: 19, 93: 68, 95: 24, 99: 78}
+ladders_medium = {3: 22, 11: 40, 20: 38, 28: 76, 50: 67, 63: 81, 71: 91}
+
+# Hard: more snakes, fewer ladders — extra long snake near the end!
+snakes_hard   = {10: 2, 16: 6, 36: 8, 48: 30, 52: 29, 64: 40, 79: 19, 93: 68, 95: 24, 99: 5}
+ladders_hard  = {3: 22, 20: 38, 50: 67, 71: 81}
+
+DIFFICULTY_SETTINGS = {
+    "easy":   (snakes_easy,   ladders_easy),
+    "medium": (snakes_medium, ladders_medium),
+    "hard":   (snakes_hard,   ladders_hard),
+}
 
 
 def roll_dice():
@@ -56,7 +69,7 @@ def roll_dice():
     return random.randint(1, 6)
 
 
-def print_board(pos1, pos2, name1, name2):
+def print_board(pos1, pos2, name1, name2, snakes, ladders):
     """
     Prints the 10x10 board with both players' positions.
     Cells are numbered in a snake pattern (left-to-right, then right-to-left).
@@ -105,6 +118,27 @@ def get_player_name(prompt, default):
     return name
 
 
+def choose_difficulty():
+    """
+    Asks the user to pick a difficulty level.
+    Returns the snakes and ladders dictionaries for that level.
+    """
+    print("\nDifficulty levels:")
+    print("  1. Easy   (4 snakes, 7 ladders)")
+    print("  2. Medium (7 snakes, 7 ladders)")
+    print("  3. Hard   (10 snakes, 4 ladders — brutal!)")
+    while True:
+        choice = input("Choose difficulty (1, 2, or 3): ").strip()
+        if choice == "1":
+            return DIFFICULTY_SETTINGS["easy"]
+        elif choice == "2":
+            return DIFFICULTY_SETTINGS["medium"]
+        elif choice == "3":
+            return DIFFICULTY_SETTINGS["hard"]
+        else:
+            print("Invalid choice. Please type 1, 2, or 3.")
+
+
 def choose_mode():
     """
     Asks the user to pick a game mode.
@@ -123,7 +157,7 @@ def choose_mode():
             print("Invalid choice. Please type 1 or 2.")
 
 
-def take_turn(name, position, history, is_computer=False):
+def take_turn(name, position, history, snakes, ladders, is_computer=False):
     """
     Plays one turn for a player. Returns the new position,
     or None if a human player chose to quit. Each move is pushed
@@ -185,7 +219,8 @@ def play_game():
     print("            WELCOME TO SNAKE & LADDER!")
     print("=" * 56)
 
-    # Pick game mode
+    # Pick difficulty and game mode
+    snakes, ladders = choose_difficulty()
     vs_computer = choose_mode()
 
     # Get player names
@@ -203,30 +238,30 @@ def play_game():
     history = Stack()
 
     while True:
-        print_board(pos1, pos2, name1, name2)
+        print_board(pos1, pos2, name1, name2, snakes, ladders)
 
         # Player 1's turn (always human)
-        new_pos = take_turn(name1, pos1, history, is_computer=False)
+        new_pos = take_turn(name1, pos1, history, snakes, ladders, is_computer=False)
         if new_pos is None:
             print("\nGame ended. Thanks for playing!")
             show_history(history)
             break
         pos1 = new_pos
         if pos1 == 100:
-            print_board(pos1, pos2, name1, name2)
+            print_board(pos1, pos2, name1, name2, snakes, ladders)
             print(f"\n*** {name1} WINS! ***")
             show_history(history)
             break
 
         # Player 2's turn (computer if vs_computer is True)
-        new_pos = take_turn(name2, pos2, history, is_computer=vs_computer)
+        new_pos = take_turn(name2, pos2, history, snakes, ladders, is_computer=vs_computer)
         if new_pos is None:
             print("\nGame ended. Thanks for playing!")
             show_history(history)
             break
         pos2 = new_pos
         if pos2 == 100:
-            print_board(pos1, pos2, name1, name2)
+            print_board(pos1, pos2, name1, name2, snakes, ladders)
             print(f"\n*** {name2} WINS! ***")
             show_history(history)
             break
